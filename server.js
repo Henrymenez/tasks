@@ -18,48 +18,87 @@ app.get("/", (req, res) => {
   });
 });
 
-app.post("/",body("x").isInt(),body("y").isInt(), (req, res) => {
+app.post("/", body("x").isInt(), body("y").isInt(), (req, res) => {
   const x = req.body.x;
   const y = req.body.y;
-  const operator = req.body.operation_type;
+  let operator = req.body.operation_type;
   const operatorEnum = ["addition", "subtraction", "multiplication"];
-let result
-let index
+  let result = 0;
+  let index;
 
-const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-    if (operatorEnum.includes(operator)) {
-     if(operator === "addition"){
-        index = 0
-result = x + y
-     }else if(operator === "subtraction"){
-        index = 1
-        result = x - y
-     }else if(operator === "multiplication"){
-        result = x * y
-        index = 3
-     }
-    return res.status(200).json({
-        status: "success",
-        data: {
-          slackUsername: "Menez",
-          operation_type: operatorEnum[index],
-          result
-        },
-      });
+  // if (operatorEnum.includes(operator)) {
+  if (operator === "addition") {
+    index = 0;
+    result = x + y;
+  } else if (operator === "subtraction") {
+    index = 1;
+    result = x - y;
+  } else if (operator === "multiplication") {
+    result = x * y;
+    index = 2;
+  } else {
+    let add = ["addition", "add", "plus"];
+    let subtract = ["subtract", "minus"];
+    let multiply = ["multiplication", "multiply", "multiple", "times"];
+    let operands = operator.split(" ");
+    let data = [];
+    operands.forEach((element) => {
+      if (add.includes(element.toLowerCase())) {
+        operator = "addition";
+      } else if (subtract.includes(element.toLowerCase())) {
+        operator = "subtraction";
+      } else if (multiply.includes(element.toLowerCase())) {
+        operator = "multiplication";
+      }
+      if (!isNaN(element)) {
+        data.push(parseInt(element));
+      }
+    });
+    if (data.length > 0) {
+  
+      for (let i = 0; i < data.length; i++) {
+        if (i == 0) {
+          result = parseInt(data[i]);
+    
+        } else {
+          if (operator == "addition") {
+            index = 0;
+            result += parseInt(data[i]);
+    
+          } else if (operator == "subtraction") {
+            index = 1;
+            result -= parseInt(data[i]);
+          } else if (operator == "multiplication") {
+            result *= parseInt(data[i]);
+            index = 2;
+          }
+        }
+      }
     } else {
-      return res.status(400).json({
-        status: "fail",
-        message: "Insert a valid Operator",
-      });
+
+      if (operator == "addition") {
+        index = 0;
+        result = x + y;
+      } else if (operator == "subtraction") {
+        index = 1;
+        result = x - y;
+      } else if (operator == "multiplication") {
+        result = x * y;
+        index = 2;
+      }
     }
-
-
+  }
+  return res.status(200).json({
+    slackUsername: "Menez",
+    operation_type: operator,
+    result,
+  });
 });
-
 app.listen(PORT, () => {
   console.log(`Server is listening at here port ${PORT}`);
 });
